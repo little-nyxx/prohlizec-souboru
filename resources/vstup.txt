@@ -1,0 +1,132 @@
+! RB
+----------
+
+! přepne do správcovského režimu
+en
+! enable
+
+! přepne do configuračního režimu
+conf t
+! configure terminal
+
+! pojmenuje router
+hostname RA
+
+! nebude vyhledávat domény když se překlepnu npř a pak nemusím čekat jak blbec
+no ip domain-lookup
+
+! Zabezpečení
+service password-encryption
+! Nastaví heslo do admina
+enable secret cisco ! cisco je to heslo bacha na mezery, ve škole vždycky cisco 
+
+! nastaví heslo k přístupu do routeru
+
+line con 0
+	password cisco
+	exec-timeout 0 0
+	logging synchronous
+	login
+	
+line vty 0 15
+	transport input ssh
+	login local
+	
+! Hlášení sem nechod pokud tu nemas co delat kulišáku!	
+banner motd "Access restricted!"
+
+int Gi0/0/1
+	description "RB-Net4"
+	ip address 192.168.4.254 255.255.255.0
+	no shutdown
+	
+int Gi0/0/0
+	description "RB-Net3"
+	ip address 192.168.3.254 255.255.255.0
+	no shutdown
+	
+int Se0/1/1
+	description "RB-RA"
+	ip address 192.168.0.2 255.255.255.252
+	clock rate 128000
+	no shutdown
+
+router rip
+	version 2
+	no auto-summary
+	network 192.168.3.0
+	network 192.168.4.0
+	network 192.168.0.0
+	passive-interface Gi0/0/0
+	passive-interface Gi0/0/1
+
+	wr - uloži /write
+	
+	
+
+-----------------------------------
+! Hledání chyb, užitečné příkazy
+sh ip int bri
+! show ip interface brief
+
+sh ip ro
+! show ip route
+!směrovací tabulka
+
+
+V KONFIGURACNIM REZIMU PRED TOTO MUSIM NAPSAT DO
+
+
+cisco
+
+exit - vyskocim o uroven vys
+end - ukonci konfiguracni rezim
+no - neguje
+no auto-summary ! nedává dohromady sítě co mají stejnou třídu adres
+passive interface Gi0/0/0 - říká že chci být připojen k síti ale nechci tam posílat směrovací informace
+network (adresa site) - říká ýe chci být připojen a že chci posílat směrovací informace
+
+------
+! RA
+------
+
+int Gi0/0/0
+	description "RB-Net1"
+	ip address 192.168.1.254 255.255.255.0
+	no shutdown
+	
+int Gi0/0/1
+	description "RB-Net2"
+	ip address 192.168.2.254 255.255.255.0
+	no shutdown
+	
+int Se0/1/0
+	description "RA-RB"
+	ip address 192.168.0.1 255.255.255.252
+	clock rate 128000
+	no shutdown
+
+! směrování	
+router rip
+	version 2
+	no auto-summary
+	network 192.168.1.0
+	network 192.168.2.0
+	network 192.168.0.0
+	passive-interface Gi0/0/0
+	passive-interface Gi0/0/1
+	
+!připojí k ssh
+	
+ip domain-name netacad.local
+ip ssh version 2
+crypto key generate rsa general-keys modulus 2048
+username cisco password cisco123
+
+
+
+
+! v příkazovém řádku 
+ssh -l cisco 192.168.2.254
+
+

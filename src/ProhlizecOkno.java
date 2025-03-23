@@ -10,6 +10,7 @@ public class ProhlizecOkno extends JFrame{
     private JTextArea txtAVypis;
 
     private List<String> seznam = new ArrayList<>();
+    private String cesta;
 
     public ProhlizecOkno() {
         initComponents();
@@ -52,27 +53,50 @@ public class ProhlizecOkno extends JFrame{
         menuFile.add(miOpen);
 
         JMenuItem miSave = new JMenuItem("Save");
-        miOpen.addActionListener(e -> {
+        miSave.addActionListener(e -> {
             try {
-                save();
+                save(cesta);
             } catch (ProhlizecException ex) {
                 throw new RuntimeException(ex);
             }
         });
         menuFile.add(miSave);
+
+        JMenuItem miSaveAs = new JMenuItem("Save as..");
+        miSaveAs.addActionListener(e -> {
+            try {
+                save(null);
+            } catch (ProhlizecException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        menuFile.add(miSaveAs);
+
     }
 
-    private void save() throws ProhlizecException {
-        JFileChooser fc = new JFileChooser();
-        int result = fc.showSaveDialog(this);
-
-        if(result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fc.getSelectedFile();
-            zapisSoubor(String.valueOf(selectedFile));
+    private void save(String cesta) throws ProhlizecException {
+        if (cesta != null) {
+            try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(cesta)))){
+                writer.println(txtAVypis.getText());
+            } catch (IOException e) {
+                System.err.println("Nastala chyba!");
+            }
+        } else {
+            JFileChooser fc = new JFileChooser("resources/");
+            int result = fc.showSaveDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File file = fc.getSelectedFile();
+                cesta = file.getPath();
+                try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(cesta)))){
+                    writer.println(txtAVypis.getText());
+                } catch (IOException e) {
+                    System.err.println("Nastala chyba!");
+                }
+            }
         }
     }
 
-    public void zapisSoubor(String nazevSouboru) throws ProhlizecException {
+   /* public void zapisSoubor(String nazevSouboru) throws ProhlizecException {
         try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(nazevSouboru)))){
             for(String string : seznam) {
                 writer.write(string + "\n");
@@ -82,7 +106,7 @@ public class ProhlizecOkno extends JFrame{
         } catch (IOException e) {
             throw new ProhlizecException("Nastala chyba!");
         }
-    }
+    }*/
 
     private void open() throws ProhlizecException {
         try {
